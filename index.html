@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>GrapesJS MJML image reconciliation demo</title>
+  </head>
+  <body>
+    <main class="page">
+      <header class="hero">
+        <p class="eyebrow">GrapesJS MJML PoC</p>
+        <h1>Preserve the rendered <code>&lt;img&gt;</code> node during MJML updates</h1>
+        <p>
+          Both editors run the same <code>grapesjs-mjml@1.0.8</code> package and the
+          same MJML input. The patched editor applies an <code>mj-image</code>-only
+          subtree reconciliation step.
+        </p>
+        <div class="actions">
+          <button id="toggle-all" disabled>Toggle width once</button>
+          <button id="toggle-auto" disabled>Start auto toggle</button>
+        </div>
+      </header>
+
+      <section class="grid">
+        <article class="demo-card baseline">
+          <div class="card-header">
+            <div>
+              <p class="label">Baseline</p>
+              <h2>Current renderer</h2>
+            </div>
+            <span id="baseline-result" class="result idle">Waiting</span>
+          </div>
+          <p class="description">
+            Attribute updates recompile MJML and replace the rendered subtree via
+            <code>innerHTML</code>.
+          </p>
+          <div id="baseline-editor" class="editor"></div>
+          <p id="baseline-metrics" class="metrics">Updates: 0 | Replacements: 0</p>
+        </article>
+
+        <article class="demo-card patched">
+          <div class="card-header">
+            <div>
+              <p class="label">Patched</p>
+              <h2>Image-only reconciliation</h2>
+            </div>
+            <span id="patched-result" class="result idle">Waiting</span>
+          </div>
+          <p class="description">
+            Matching nodes keep their identity while attributes are synchronized
+            in place.
+          </p>
+          <div id="patched-editor" class="editor"></div>
+          <p id="patched-metrics" class="metrics">Updates: 0 | Replacements: 0</p>
+        </article>
+      </section>
+
+      <footer>
+        Change: <code>width="240px"</code> <span aria-hidden="true">&harr;</span>
+        <code>width="420px"</code>. A replacement is detected by comparing the
+        rendered <code>&lt;img&gt;</code> DOM object before and after each update.
+      </footer>
+    </main>
+
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>
+
