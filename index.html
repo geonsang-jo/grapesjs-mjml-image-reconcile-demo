@@ -56,9 +56,14 @@
       </section>
 
       <footer>
-        Change: <code>width="240px"</code> <span aria-hidden="true">&harr;</span>
-        <code>width="420px"</code>. A replacement is detected by comparing the
-        rendered <code>&lt;img&gt;</code> DOM object before and after each update.
+        Each update toggles <code>width="240px"</code>
+        <span aria-hidden="true">&harr;</span> <code>width="420px"</code> and
+        cache-busts the image <code>src</code> to force a real reload. The
+        baseline recreates the <code>&lt;img&gt;</code> (it blanks, then
+        re-fetches); the patched editor keeps the same <code>&lt;img&gt;</code>
+        node, so the picture swaps in place without flickering. A replacement is
+        detected by comparing the rendered <code>&lt;img&gt;</code> DOM object
+        before and after each update.
       </footer>
     </main>
 

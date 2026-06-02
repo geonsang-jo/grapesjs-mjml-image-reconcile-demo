@@ -3,6 +3,8 @@ import grapesJSMJML from 'grapesjs-mjml';
 import 'grapesjs/dist/css/grapes.min.css';
 import './style.css';
 
+const IMAGE_SRC = 'https://picsum.photos/id/1015/640/360';
+
 const MJML = `
   <mjml>
     <mj-body>
@@ -12,7 +14,7 @@ const MJML = `
             width="240px"
             border-radius="12px"
             alt="Mountain lake"
-            src="https://picsum.photos/id/1015/640/360"
+            src="${IMAGE_SRC}"
           />
         </mj-column>
       </mj-section>
@@ -20,14 +22,24 @@ const MJML = `
   </mjml>
 `;
 
+// Injected into each canvas iframe: any freshly mounted <img> fades in.
+// The baseline recreates the <img> on every update, so the animation replays
+// (a visible flash); the patched editor keeps the node, so it never replays.
+const FLASH_STYLE = `
+  img { animation: reconcile-flash 600ms ease; }
+  @keyframes reconcile-flash { from { opacity: 0; } to { opacity: 1; } }
+`;
+
 type ImageComponent = {
   addStyle(style: Record<string, string>): void;
+  set(name: string, value: unknown): void;
   getEl(): HTMLElement;
 };
 
 type Demo = {
   image: ImageComponent;
   metrics: HTMLElement;
+  reload: number;
   replacements: number;
   result: HTMLElement;
   updates: number;
@@ -95,7 +107,7 @@ const patchMjImageRenderer = (editor: Editor) => {
     throw new Error('Could not find the mj-image view');
   }
 
-  prototype.render = function(p: unknown, c: unknown, opts: unknown, appendChildren: boolean) {
+  prototype.render = function(_p: unknown, _c: unknown, _opts: unknown, appendChildren: boolean) {
     this.renderAttributes();
     const nextEl = this.el.cloneNode() as HTMLElement;
     nextEl.innerHTML = this.getTemplateFromMjml();
@@ -117,7 +129,7 @@ const patchMjImageRenderer = (editor: Editor) => {
 
 const waitForLoad = (editor: Editor) =>
   new Promise<void>((resolve) => {
-    editor.on('load', resolve);
+    editor.on('load', () => resolve());
   });
 
 const waitForImage = async (editor: Editor) => {
@@ -134,10 +146,22 @@ const waitForImage = async (editor: Editor) => {
   throw new Error('Rendered mj-image was not ready');
 };
 
+const injectFlashStyle = (editor: Editor) => {
+  const doc = editor.Canvas.getDocument();
+
+  if (!doc) {
+    return;
+  }
+
+  const style = doc.createElement('style');
+  style.textContent = FLASH_STYLE;
+  doc.head.appendChild(style);
+};
+
 const createDemo = async (id: 'baseline' | 'patched') => {
   const editor = grapesjs.init({
     container: `#${id}-editor`,
-    height: '100%',
+    height: '430px',
     noticeOnUnload: false,
     panels: { defaults: [] },
     plugins: [grapesJSMJML],
@@ -149,11 +173,13 @@ const createDemo = async (id: 'baseline' | 'patched') => {
   }
 
   await waitForLoad(editor);
+  injectFlashStyle(editor);
   editor.addComponents(MJML);
 
   return {
     image: await waitForImage(editor),
     metrics: document.querySelector(`#${id}-metrics`)!,
+    reload: 0,
     replacements: 0,
     result: document.querySelector(`#${id}-result`)!,
     updates: 0,
@@ -164,6 +190,11 @@ const createDemo = async (id: 'baseline' | 'patched') => {
 const updateDemo = (demo: Demo) => {
   const before = demo.image.getEl().querySelector('img');
   demo.width = demo.width === 240 ? 420 : 240;
+  demo.reload += 1;
+  // Force a real network reload so the difference is visible: the baseline
+  // mounts a brand-new <img> that blanks until it re-fetches, while the patched
+  // editor keeps the already-painted node and swaps its src in place.
+  demo.image.set('src', `${IMAGE_SRC}?reload=${demo.reload}`);
   demo.image.addStyle({ width: `${demo.width}px` });
   const after = demo.image.getEl().querySelector('img');
   const preserved = before === after;
