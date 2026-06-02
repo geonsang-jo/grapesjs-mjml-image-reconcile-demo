@@ -2,7 +2,7 @@
 
 Side-by-side reproduction for `grapesjs-mjml@1.0.8`.
 
-[![Open in StackBlitz](https://developer.stackblitz.com/img/open_in_stackblitz.svg)](https://stackblitz.com/github/geonsang-jo/grapesjs-mjml-image-reconcile-demo)
+[![Open in StackBlitz](https://developer.stackblitz.com/img/open_in_stackblitz.svg)](https://stackblitz.com/github/geonsang-jo/grapesjs-mjml-image-reconcile-demo?startScript=dev&view=preview)
 
 - **Baseline:** an `mj-image` width update replaces the rendered subtree.
 - **Patched:** an `mj-image`-only reconciliation step preserves matching DOM nodes and synchronizes their attributes in place.
